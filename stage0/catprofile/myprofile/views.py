@@ -10,8 +10,8 @@ logging.basicConfig(level=logging.INFO)
 # Create your views here.
 
 def fetchMe(request):
-  print("Hello")
   url = 'https://catfact.ninja/fact'
+  response = None
   #verify if user is calling a GET request
   if request.method == "GET":
     try:
@@ -40,16 +40,18 @@ def fetchMe(request):
         return JsonResponse(data)
     #handles exceptions with corresponding status code
     except requests.Timeout:
+      r_code = 500 if response is None else response.status_code
       error = {
         "message": "the request timed out",
-        "status": response.status_code
+        "status": r_code
       }
-      logging.error(f"an error occurred: {str(e)}")
+      logging.error(f"an error occurred: {error}")
       return JsonResponse(error)
     except requests.RequestException as e:
       fallback_fact = "Could not fetch cat fact at the moment. Please try again later."
+      r_code = 500 if response is None else response.status_code
       error =  {
-          "status": "error",
+          "status": r_code,
           "error": fallback_fact,
       }
       logging.error(f"an error occurred: {fallback_fact}")
@@ -57,12 +59,13 @@ def fetchMe(request):
       return JsonResponse(error)
     except Exception as ex:
       print(ex)
+      r_code = 500 if response is None else response.status_code
       error = {
-        "status": response.status_code,
+        "status": r_code,
         "message": "an error occurred!!!",
         "error": str(ex)
       }
-      logging.error(f"an error occurred: {str(e)}")
+      logging.error(f"an error occurred: {str(ex)}")
       return JsonResponse(error)
   else:
     #returns invalid response for post requests
